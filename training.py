@@ -89,7 +89,7 @@ def r_train():
 
     model.compile(optimizer=optimizer,
                   loss="categorical_crossentropy",
-                  metrics=["accuracy"])
+                  metrics=["categorical_accuracy"])
 
     print(model.summary())
 
