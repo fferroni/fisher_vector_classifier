@@ -63,7 +63,7 @@ def data_generator(X, y, batch_size=32, nb_points=1024, **kwargs):
             start = i * batch_size
             end = (i + 1) * batch_size
 
-            yield augment(X[start:end, np.random.choice(max_points, size=nb_points)], **kwargs), y[start:end]
+            yield augment(X[start:end, sorted(np.random.choice(max_points, size=nb_points, replace=False))], **kwargs), y[start:end]
 
 
 def r_train():
@@ -80,12 +80,12 @@ def r_train():
         "/home/francesco/data/modelnet40_ply_hdf5_2048/ply_data_test1.h5"
     ]
 
-    NB_POINTS = 2048
-    BATCH_SIZE = 16
+    NB_POINTS = 1024
+    BATCH_SIZE = 32
 
     model = build_classification_network(BATCH_SIZE, NB_POINTS, (8, 8, 8), 0.0156)
 
-    optimizer = tf.keras.optimizers.Adam(lr=0.001, clipvalue=1.0)
+    optimizer = tf.keras.optimizers.Adam(lr=0.0005, clipnorm=2.0)
 
     model.compile(optimizer=optimizer,
                   loss="categorical_crossentropy",
@@ -96,16 +96,23 @@ def r_train():
     X_train, y_train = get_data(training_data)
     X_val, y_val = get_data(testing_data)
 
-    model.fit_generator(data_generator(X_train, y_train, batch_size=BATCH_SIZE, nb_points=NB_POINTS),
+    train_gen = data_generator(X_train, y_train, batch_size=BATCH_SIZE, nb_points=NB_POINTS,
+                               translate=True, insert_outliers=True, jitter=True, rotate=True)
+
+    valid_gen = data_generator(X_val, y_val, batch_size=BATCH_SIZE, nb_points=NB_POINTS,
+                               translate=False, insert_outliers=False, jitter=False, rotate=False)
+
+    model.fit_generator(train_gen,
                         callbacks=[
                               tf.keras.callbacks.TensorBoard(log_dir='/home/francesco/test'),
                               tf.keras.callbacks.ModelCheckpoint(filepath='/home/francesco/test/weights_{epoch:02d}_{val_loss:.2f}.h5'),
                               tf.keras.callbacks.ReduceLROnPlateau(factor=0.5, patience=5, min_lr=1e-6)
                         ],
                         steps_per_epoch=X_train.shape[0] // BATCH_SIZE,
-                        validation_data=data_generator(X_val, y_val, BATCH_SIZE, nb_points=NB_POINTS),
+                        validation_data=valid_gen,
                         validation_steps=X_val.shape[0] // BATCH_SIZE,
                         epochs=200)
+
 
 if __name__ == "__main__":
     r_train()

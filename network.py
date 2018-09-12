@@ -9,8 +9,8 @@ from fisher_vectors_3d import Modified3DFisherVectors
 
 def inception_block(x, nb_filters=64, name="block1"):
 
-    conv3d = partial(Conv3D, activation="relu", bias=False, padding="same")
-    batchn = partial(BatchNormalization, momentum=0.9)
+    conv3d = partial(Conv3D, activation="relu", use_bias=False, padding="same")
+    batchn = partial(BatchNormalization, momentum=0.99)
 
     conv_1x1 = conv3d(nb_filters,
                       [1, 1, 1],
@@ -62,8 +62,8 @@ def build_classification_network(batch_size, nb_points, subdivisions, variance):
     x = Dropout(0.3, name="dp1")(x)
     x = Dense(256, name="fc2", activation="relu")(x)
     x = Dropout(0.3, name="dp2")(x)
-    x = Dense(128, name="fc2", activation="relu")(x)
-    x = Dropout(0.3, name="dp2")(x)
+    x = Dense(128, name="fc3", activation="relu")(x)
+    x = Dropout(0.3, name="dp3")(x)
     x = Dense(40, name="output", activation="softmax")(x)
 
     return tf.keras.models.Model(points, x)
