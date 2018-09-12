@@ -58,8 +58,11 @@ def data_generator(X, y, batch_size=32, nb_points=1024, **kwargs):
 
     while True:
 
-        np.random.shuffle(X)
-        np.random.shuffle(y)
+        shuffled_ids = np.arange(0, X.shape[0])
+        np.random.shuffle(shuffled_ids)
+
+        X = X[shuffled_ids]
+        y = y[shuffled_ids]
 
         for i in range(nb_batches):
 
