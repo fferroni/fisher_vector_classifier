@@ -23,10 +23,8 @@ class Modified3DFisherVectors(tf.keras.layers.Layer):
         batch_size, nb_points, features = input_shape
 
         self.nb_points = int(nb_points)
-        batch_sig = tf.tile(tf.expand_dims(self.sigma, 0), [nb_points, 1, 1])
-        self.batch_sig = tf.tile(tf.expand_dims(batch_sig, 0), [batch_size, 1, 1, 1])
-        batch_mu = tf.tile(tf.expand_dims(self.mu, 0), [nb_points, 1, 1])
-        self.batch_mu = tf.tile(tf.expand_dims(batch_mu, 0), [batch_size, 1, 1, 1])
+        self.batch_sig = tf.tile(tf.expand_dims(tf.expand_dims(self.sigma, 0), 0), [batch_size, nb_points, 1, 1])
+        self.batch_mu = tf.tile(tf.expand_dims(tf.expand_dims(self.mu, 0), 0), [batch_size, nb_points, 1, 1])
         self.batch_w = tf.tile(tf.expand_dims(tf.expand_dims(self.w, 0), 0), [batch_size, nb_points, 1])
 
         # Compute derivatives
