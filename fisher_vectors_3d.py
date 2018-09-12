@@ -21,6 +21,7 @@ class Modified3DFisherVectors(tf.keras.layers.Layer):
     def build(self, input_shape):
 
         batch_size, nb_points, features = input_shape
+
         self.nb_points = int(nb_points)
         batch_sig = tf.tile(tf.expand_dims(self.sigma, 0), [nb_points, 1, 1])
         self.batch_sig = tf.tile(tf.expand_dims(batch_sig, 0), [batch_size, 1, 1, 1])
@@ -86,7 +87,7 @@ class Modified3DFisherVectors(tf.keras.layers.Layer):
         if self.flatten:
             # flatten d_mu and d_sigma
             d_pi = tf.contrib.layers.flatten(tf.transpose(d_pi, perm=[0, 2, 1]))
-            d_mu = tf.contrib.layers.flatten(tf.transpose(d_mu,perm=[0, 2, 1]))
+            d_mu = tf.contrib.layers.flatten(tf.transpose(d_mu, perm=[0, 2, 1]))
             d_sigma = tf.contrib.layers.flatten(tf.transpose(d_sigma, perm=[0, 2, 1]))
             fv = tf.concat([d_pi, d_mu, d_sigma], axis=1)
         else:

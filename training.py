@@ -67,6 +67,7 @@ def data_generator(X, y, batch_size=32, nb_points=1024, **kwargs):
 
 
 def r_train():
+
     training_data = [
         "/home/francesco/data/modelnet40_ply_hdf5_2048/ply_data_train0.h5",
         "/home/francesco/data/modelnet40_ply_hdf5_2048/ply_data_train1.h5",
