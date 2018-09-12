@@ -23,9 +23,9 @@ class Modified3DFisherVectors(tf.keras.layers.Layer):
         batch_size, nb_points, features = input_shape
 
         self.nb_points = int(nb_points)
-        self.batch_sig = tf.tile(tf.expand_dims(tf.expand_dims(self.sigma, 0), 0), [batch_size, nb_points, 1, 1])
-        self.batch_mu = tf.tile(tf.expand_dims(tf.expand_dims(self.mu, 0), 0), [batch_size, nb_points, 1, 1])
         self.batch_w = tf.tile(tf.expand_dims(tf.expand_dims(self.w, 0), 0), [batch_size, nb_points, 1])
+        self.batch_mu = tf.tile(tf.expand_dims(tf.expand_dims(self.mu, 0), 0), [batch_size, nb_points, 1, 1])
+        self.batch_sig = tf.tile(tf.expand_dims(tf.expand_dims(self.sigma, 0), 0), [batch_size, nb_points, 1, 1])
 
         # Compute derivatives
         self.w_per_batch_per_d = tf.tile(tf.expand_dims(tf.expand_dims(self.w, 0), -1), [batch_size, 1, 3 * self.D])
@@ -52,7 +52,7 @@ class Modified3DFisherVectors(tf.keras.layers.Layer):
         p_per_point = self.mvn.prob(batch_points)
 
         w_p = tf.multiply(p_per_point, self.batch_w)
-        Q = w_p/tf.tile(tf.expand_dims(tf.reduce_sum(w_p, axis=-1), -1), [1, 1, self.nb_gaussians])
+        Q = w_p / tf.tile(tf.expand_dims(tf.reduce_sum(w_p, axis=-1), -1), [1, 1, self.nb_gaussians])
         Q_per_d = tf.tile(tf.expand_dims(Q, -1), [1, 1, 1, self.D])
 
         # Compute derivatives and take max and min
@@ -78,9 +78,9 @@ class Modified3DFisherVectors(tf.keras.layers.Layer):
         d_sigma = tf.sign(d_sigma) * tf.pow(tf.abs(d_sigma), alpha)
 
         # L2 normalization
-        d_pi = tf.nn.l2_normalize(d_pi, dim=1)
-        d_mu = tf.nn.l2_normalize(d_mu, dim=1)
-        d_sigma = tf.nn.l2_normalize(d_sigma, dim=1)
+        d_pi = tf.nn.l2_normalize(d_pi, axis=1)
+        d_mu = tf.nn.l2_normalize(d_mu, axis=1)
+        d_sigma = tf.nn.l2_normalize(d_sigma, axis=1)
 
         if self.flatten:
             # flatten d_mu and d_sigma

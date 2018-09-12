@@ -10,7 +10,7 @@ from fisher_vectors_3d import Modified3DFisherVectors
 def inception_block(x, nb_filters=64, name="block1"):
 
     conv3d = partial(Conv3D, activation="linear", use_bias=False, padding="same")
-    batchn = partial(BatchNormalization, momentum=0.95, fused=True)
+    batchn = partial(BatchNormalization, momentum=0.99, fused=True)
     activn = partial(Activation, activation="relu")
 
     conv_1x1 = conv3d(nb_filters,

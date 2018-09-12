@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from augmentations import rotate_point_cloud, \
-    translate_point_cloud, insert_outliers_to_point_cloud, jitter_point_cloud
+    translate_point_cloud, insert_outliers_to_point_cloud, jitter_point_cloud, scale_point_cloud
 from network import build_classification_network
 
 
@@ -30,7 +30,7 @@ def get_data(files):
     return X, y
 
 
-def augment(X, rotate=False, translate=False, insert_outliers=False, jitter=False):
+def augment(X, rotate=False, translate=False, insert_outliers=False, jitter=False, scale=False):
 
     if rotate:
         X = rotate_point_cloud(X)
@@ -43,6 +43,9 @@ def augment(X, rotate=False, translate=False, insert_outliers=False, jitter=Fals
 
     if jitter:
         X = jitter_point_cloud(X)
+
+    if scale:
+        X = scale_point_cloud(X)
 
     return X
 
@@ -86,7 +89,7 @@ def r_train():
 
     model = build_classification_network(BATCH_SIZE, NB_POINTS, (8, 8, 8), 0.0156)
 
-    optimizer = tf.keras.optimizers.Adam(lr=0.0005, clipnorm=2.0)
+    optimizer = tf.keras.optimizers.Adam(lr=0.001)
 
     model.compile(optimizer=optimizer,
                   loss="categorical_crossentropy",
@@ -98,10 +101,10 @@ def r_train():
     X_val, y_val = get_data(testing_data)
 
     train_gen = data_generator(X_train, y_train, batch_size=BATCH_SIZE, nb_points=NB_POINTS,
-                               translate=True, insert_outliers=True, jitter=True, rotate=True)
+                               translate=True, insert_outliers=True, jitter=True, rotate=False, scale=True)
 
     valid_gen = data_generator(X_val, y_val, batch_size=BATCH_SIZE, nb_points=NB_POINTS,
-                               translate=False, insert_outliers=False, jitter=False, rotate=False)
+                               translate=False, insert_outliers=False, jitter=False, rotate=False, scale=False)
 
     model.fit_generator(train_gen,
                         callbacks=[
