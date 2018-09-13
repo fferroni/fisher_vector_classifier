@@ -1,13 +1,13 @@
 import h5py
 import numpy as np
 import tensorflow as tf
-
+from typing import List
 from augmentations import rotate_point_cloud, \
     translate_point_cloud, insert_outliers_to_point_cloud, jitter_point_cloud, scale_point_cloud
 from network import build_classification_network
 
 
-def get_data(files):
+def get_data(files: List[str]):
 
     X = []
     y = []
@@ -30,7 +30,12 @@ def get_data(files):
     return X, y
 
 
-def augment(X, rotate=False, translate=False, insert_outliers=False, jitter=False, scale=False):
+def augment(X: np.ndarray,
+            rotate: bool=False,
+            translate: bool=False,
+            insert_outliers: bool=False,
+            jitter: bool=False,
+            scale: bool=False):
 
     if rotate:
         X = rotate_point_cloud(X)
@@ -50,7 +55,7 @@ def augment(X, rotate=False, translate=False, insert_outliers=False, jitter=Fals
     return X
 
 
-def data_generator(X, y, batch_size=32, nb_points=1024, **kwargs):
+def data_generator(X: np.ndarray, y: np.ndarray, batch_size: int=32, nb_points: int=1024, **kwargs):
 
     nb_batches = X.shape[0] // batch_size
     max_points = X.shape[1]
@@ -90,7 +95,7 @@ def r_train():
     NB_POINTS = 1024
     BATCH_SIZE = 32
 
-    model = build_classification_network(BATCH_SIZE, NB_POINTS, (8, 8, 8), 0.0156)
+    model = build_classification_network(BATCH_SIZE, NB_POINTS, (5, 5, 5), 0.0156)
 
     optimizer = tf.keras.optimizers.Adam(lr=0.001)
 
@@ -118,6 +123,8 @@ def r_train():
                         steps_per_epoch=X_train.shape[0] // BATCH_SIZE,
                         validation_data=valid_gen,
                         validation_steps=X_val.shape[0] // BATCH_SIZE,
+                        use_multiprocessing=True,
+                        workers=2,
                         epochs=200)
 
 

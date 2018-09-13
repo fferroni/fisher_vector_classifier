@@ -3,47 +3,44 @@ from functools import partial
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Conv3D, AvgPool3D, Concatenate, Reshape, Permute, MaxPool3D, Flatten, Dense
 from tensorflow.keras.layers import BatchNormalization, Dropout, Activation
+from typing import Tuple
 
 from fisher_vectors_3d import Modified3DFisherVectors
 
 
-def inception_block(x, nb_filters=64, name="block1"):
+def inception_block(x: tf.keras.layers.Layer, nb_filters: int=64, name: str="block1"):
+    """
+    3D inception block, as per Itzik et al. (2018)
+    """
 
     conv3d = partial(Conv3D, activation="linear", use_bias=False, padding="same")
     batchn = partial(BatchNormalization, momentum=0.99, fused=True)
     activn = partial(Activation, activation="relu")
 
-    conv_1x1 = conv3d(nb_filters,
-                      [1, 1, 1],
-                      name=name + "_1x1_conv3d")(x)
+    conv_1x1 = conv3d(nb_filters, (1, 1, 1), name=name + "_1x1_conv3d")(x)
     conv_1x1 = batchn(name=name + "_1x1_bn")(conv_1x1)
     conv_1x1 = activn(name=name + "_1x1_relu")(conv_1x1)
 
-    conv_3x3 = conv3d(nb_filters // 2,
-                      [3, 3, 3],
-                      name=name + "_3x3_conv3d")(conv_1x1)
+    conv_3x3 = conv3d(nb_filters // 2, (3, 3, 3), name=name + "_3x3_conv3d")(conv_1x1)
     conv_3x3 = batchn(name=name + "_3x3_bn")(conv_3x3)
     conv_3x3 = activn(name=name + "_3x3_relu")(conv_3x3)
 
-    conv_5x5 = conv3d(nb_filters // 2,
-                      [5, 5, 5],
-                      name=name + "_5x5_conv3d")(conv_1x1)
+    conv_5x5 = conv3d(nb_filters // 2, (5, 5, 5), name=name + "_5x5_conv3d")(conv_1x1)
     conv_5x5 = batchn(name=name + "_5x5_bn")(conv_5x5)
     conv_5x5 = activn(name=name + "_5x5_relu")(conv_5x5)
 
-    avgpool = AvgPool3D(strides=(1, 1, 1), pool_size=(3, 3, 3),
-                        padding="same", name=name+"_avgpool")(x)
-    avgpool = conv3d(nb_filters,
-                     [1, 1, 1],
-                     name=name + "_avgpool_conv3d")(avgpool)
+    avgpool = AvgPool3D(strides=(1, 1, 1), pool_size=(3, 3, 3), padding="same", name=name+"_avgpool")(x)
+    avgpool = conv3d(nb_filters, (1, 1, 1), name=name + "_avgpool_conv3d")(avgpool)
     avgpool = batchn(name=name + "_avgpool_bn")(avgpool)
     avgpool = activn(name=name + "_avgpool_relu")(avgpool)
 
     return Concatenate(axis=-1, name=name+"_concat")([conv_1x1, conv_3x3, conv_5x5, avgpool])
 
 
-def build_classification_network(batch_size, nb_points, subdivisions, variance):
-
+def build_classification_network(batch_size: int, nb_points: int, subdivisions: Tuple[int, int, int], variance: float):
+    """
+    Build a classification network, using modified 3D Fisher Vectors as point cloud featurizer at the input.
+    """
     points = Input(batch_shape=(batch_size, nb_points, 3), name="points")
 
     fv = Modified3DFisherVectors(subdivisions, variance, flatten=False)(points)
